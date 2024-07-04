@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: automation-agents 
+spec:
+  replicas: 5
+  progressDeadlineSeconds: 1800
+  selector:
+    matchLabels:
+      app: automation-agents
+  template:
+    metadata:
+      labels:
+        app: automation-agents
+    spec:
+      containers:
+        - image: docker:23.0.1-dind
+          imagePullPolicy: IfNotPresent
+          command: ["dockerd", "--host", "tcp://127.0.0.1:2375"]
+          name: docker-daemon
+          resources:
+            requests:
+              cpu: 20m
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 4Gi
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: ca-cert
+            mountPath: /etc/docker/certs.d/dcr-camp-dev.pwc.in/tls.crt
+            subPath: tls.crt
+        - name: automation-agents
+#          image: ACR_NAME/REPOSITORY_NAME:VER
+          image: ACR_NAME/REPOSITORY_NAME:VER
+          ports:
+          - containerPort: 80
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 2.5Gi
+          env:
+            - name: DOCKER_HOST 
+              value: "tcp://localhost:2375"
+            - name: AZP_POOL
+              value: AZP_POOL_NAME
+            - name: AZP_TOKEN
+              value: AZP_TOKEN_SECRET
+            - name: AZP_URL
+              value: AZP_URL_VALUE    
+      imagePullSecrets:
+        - name: soham-acr-secret        
+#        - name: reg-cred-secret
+      volumes: 
+      - name: docker-graph-storage 
+        emptyDir: {}
+      - name: ca-cert
+        secret:
+          secretName: dcr-domain-secret
+      

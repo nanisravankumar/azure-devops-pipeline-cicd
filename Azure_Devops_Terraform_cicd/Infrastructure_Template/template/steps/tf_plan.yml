@@ -1,0 +1,56 @@
+parameters:
+- name: env
+  displayName: Environment
+- name: tf_command
+  displayName: tf_command
+  
+steps:
+  # - task: AzureAppConfiguration@6
+  #   inputs:
+  #     # azureSubscription: 'IC-Common-NonProduction-Subscription (14ab3967-5405-4155-8149-cfe09d49cd37)'
+  #     ${{ if eq(parameters.env, 'qa') }}:
+  #       azureSubscription: "IC-Common-NonProduction-Subscription (14ab3967-5405-4155-8149-cfe09d49cd37)"
+  #     ${{ if eq(parameters.env, 'prod') }}:
+  #       azureSubscription: "Ael-prod-svc"
+  #     AppConfigurationEndpoint: 'https://az01aacqa01.azconfig.io'
+  #     KeyFilter: '*'
+  #     # Label: 'qa'
+  #     ${{ if eq(parameters.env, 'qa') }}:
+  #       Label: 'qa'
+  #     ${{ if eq(parameters.env, 'prod') }}:
+  #       Label: 'prod'
+      
+  # - task: replacetokens@5
+  #   inputs:
+  #     rootDirectory: '$(System.DefaultWorkingDirectory)'
+  #     # targetFiles: './env/"${{parameters.env}}.auto.tfvars"'
+  #     ${{ if eq(parameters.env, 'qa') }}:
+  #       targetFiles: './env/${{parameters.env}}.auto.tfvars '
+  #     ${{ if eq(parameters.env, 'prod') }}:
+  #       targetFiles: './env/${{parameters.env}}.auto.tfvars '
+  #     encoding: 'auto'
+  #     tokenPattern: 'custom'
+  #     tokenPrefix: '##'
+  #     tokenSuffix: '##'
+  #     writeBOM: true
+  #     actionOnMissing: 'warn'
+  #     keepToken: false
+  #     actionOnNoFiles: 'continue'
+  #     enableTransforms: false
+  #     enableRecursion: false
+  #     useLegacyPattern: false
+  #     enableTelemetry: true
+
+  - task: TerraformTaskV1@0
+    displayName: 'plan'
+    inputs:
+      provider: 'azurerm'
+      command: ${{parameters.tf_command}}
+      commandOptions: '-input=false -var-file=./env/terra.auto.tfvars '
+      # environmentServiceNameAzureRM: '${{ variables.service_connection }}'
+      ${{ if eq(parameters.env, 'qa') }}:
+        environmentServiceNameAzureRM: "IC-Common-NonProduction-Subscription (14ab3967-5405-4155-8149-cfe09d49cd37)"
+      ${{ if eq(parameters.env, 'prod') }}:
+        environmentServiceNameAzureRM: "Ael-prod-svc"  
+      # environmentServiceNameAzureRM: 'Ael-prod-svc'   
+      workingDirectory: '$(System.DefaultWorkingDirectory)'

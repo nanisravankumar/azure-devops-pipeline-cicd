@@ -1,0 +1,68 @@
+name: $(Date:yyyy.MM.dd)-ado-automation-agents-$(Build.BuildId)
+trigger: none
+
+pool: 
+  name: new-IDA-agentpool
+
+variables:
+- group: automation_agent_details
+- group: acr-var
+
+stages:
+- stage: Build
+  displayName: Build Agent Images
+  jobs:  
+  - job: Build
+    displayName: Build
+    timeoutInMinutes: 0 # how long to run the job before automatically cancelling
+ 
+    steps:
+       - task: CmdLine@2
+         displayName: 'Build and Push Image'
+         inputs:
+            script: |
+              cd agents/automation-agents
+              docker login acrforida.azurecr.io --username $(username) --password $(password)
+              docker pull alpine
+              docker login $(acrRegistry) --username $(acrusername) --password $(azureACRToken)
+              docker build -t agents:$(VER) .
+              docker tag agents:$(VER) $(acrRegistry)/$(acrRepository):$(VER)
+              echo "TAG: ->"$(acrRegistry)/$(acrRepository):$(VER)
+              docker push $(acrRegistry)/$(acrRepository):$(VER)
+              docker rmi $(acrRegistry)/$(acrRepository):$(VER)
+
+- stage: Deploy
+  displayName: Deploy Agents on AKS cluster
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: Deploy
+    condition: succeeded()
+    displayName: Deploy Docker Buid Agents Job
+    
+    steps:
+          - task: Kubernetes@1
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: 'Achinta-aks'
+              namespace: 'ado-agents'
+              command: 'login'
+            
+          - task: CmdLine@2
+            displayName: 'Replace Tokens'
+            inputs:
+                script: |
+                   sed -i 's,AZP_POOL_NAME,$(PoolName),g' agents/deployments/automation-agents/automation-agents.yaml
+                   sed -i 's,AZP_URL_VALUE,$(OrganizationURL),g' agents/deployments/automation-agents/automation-agents.yaml
+                   sed -i 's,AZP_TOKEN_SECRET,$(Pat),g' agents/deployments/automation-agents/automation-agents.yaml
+                   sed -i 's,ACR_NAME,$(acrRegistry),g' agents/deployments/automation-agents/automation-agents.yaml
+                   sed -i 's,REPOSITORY_NAME,$(acrRepository),g' agents/deployments/automation-agents/automation-agents.yaml
+                   sed -i 's,VER,$(VER),g' agents/deployments/automation-agents/automation-agents.yaml
+                   
+                   cat agents/deployments/automation-agents/automation-agents.yaml
+                   
+          - task: CmdLine@2
+            displayName: 'Deploy'
+            inputs:
+                script: |
+                  kubectl apply -f agents/deployments/automation-agents/automation-agents.yaml -n ado-agents   

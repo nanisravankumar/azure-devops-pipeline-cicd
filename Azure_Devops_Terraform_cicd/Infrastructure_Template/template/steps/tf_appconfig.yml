@@ -1,0 +1,44 @@
+parameters:
+- name: env
+  displayName: Environment
+
+steps:
+  - task: AzureAppConfiguration@6
+    inputs:
+      # azureSubscription: 'IC-Common-NonProduction-Subscription (14ab3967-5405-4155-8149-cfe09d49cd37)'
+      ${{ if eq(parameters.env, 'qa') }}:
+        azureSubscription: "IC-Common-NonProduction-Subscription (14ab3967-5405-4155-8149-cfe09d49cd37)"
+      ${{ if eq(parameters.env, 'prod') }}:
+        azureSubscription: "Ael-prod-svc"
+      # AppConfigurationEndpoint: 'https://az01aacqa01.azconfig.io'
+      ${{ if eq(parameters.env, 'qa') }}:
+        AppConfigurationEndpoint: 'https://az01aacqa01.azconfig.io'
+      ${{ if eq(parameters.env, 'prod') }}:
+        AppConfigurationEndpoint: 'https://az01aacp01.azconfig.io'  
+      KeyFilter: '*'
+      Label: 'env-infra'
+      # ${{ if eq(parameters.env, 'qa') }}:
+      #   Label: 'env-infra'
+      # ${{ if eq(parameters.env, 'prod') }}:
+      #   Label: 'prod'
+      
+  - task: replacetokens@5
+    inputs:
+      rootDirectory: '$(System.DefaultWorkingDirectory)'
+      targetFiles: './env/terra.auto.tfvars'
+      # ${{ if eq(parameters.env, 'qa') }}:
+      #   targetFiles: './env/${{parameters.env}}.auto.tfvars'
+      # ${{ if eq(parameters.env, 'prod') }}:
+      #   targetFiles: './env/${{parameters.env}}.auto.tfvars'
+      encoding: 'auto'
+      tokenPattern: 'custom'
+      tokenPrefix: '##'
+      tokenSuffix: '##'
+      writeBOM: true
+      actionOnMissing: 'warn'
+      keepToken: false
+      actionOnNoFiles: 'continue'
+      enableTransforms: false
+      enableRecursion: false
+      useLegacyPattern: false
+      enableTelemetry: true

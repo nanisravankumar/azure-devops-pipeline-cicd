@@ -1,0 +1,24 @@
+jobs:
+- job: DevDeploy
+  steps:
+  - task: KubectlInstaller@0
+    displayName: 'Install Kubectl latest'
+  
+  - template: appconfiguration.yml@pipeline_central_repo
+    parameters:
+      environment: dev
+
+  - task: replacetokens@6
+    inputs:
+      root: '$(System.DefaultWorkingDirectory)'
+      sources: 'deployment-template.yml'
+      transformsPrefix: '#{'
+      transformsSuffix: '}#'
+      telemetryOptout: true
+  
+  - task: KubernetesManifest@1
+    displayName: 'Deploy to Dev'
+    inputs:
+      kubernetesServiceConnection: aksharishdev
+      namespace: dev
+      manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'

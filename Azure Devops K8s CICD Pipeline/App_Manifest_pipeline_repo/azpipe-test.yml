@@ -1,0 +1,171 @@
+pool:
+  name: Azure Pipelines
+steps:
+- task: KubectlInstaller@0
+  displayName: 'Install Kubectl latest'
+
+- task: KubernetesManifest@1
+  displayName: 'dev-deploy'
+  inputs:
+    kubernetesServiceConnection: aksharishdev
+    namespace: dev
+    manifests: 'deployment-template.yml'
+
+- task: KubernetesManifest@1
+  displayName: 'qa-deploy'
+  inputs:
+    kubernetesServiceConnection: aksharish
+    namespace: qa
+    manifests: 'deployment-template.yml'
+
+
+
+# Updated code with azure app configuration 
+# Note: pass below variable values in azure app configuration with label: dev
+pool:
+  name: Azure Pipelines
+
+# variables:
+#   image: 'nginx:latest'
+#   name: 'fn-dep'
+#   port: 80
+#   replicas: 3
+#   app: 'nginx'
+
+stages:
+- stage: DevDeploy
+  jobs:
+  - job: DevDeploy
+    steps:
+    - task: KubectlInstaller@0
+      displayName: 'Install Kubectl latest'
+    - task: AzureAppConfiguration@7
+      inputs:
+        azureSubscription: 'Azuresubscription'
+        AppConfigurationEndpoint: 'https://aksconfiguration.azconfig.io'
+        KeyFilter: '*'
+        Label: 'dev'
+    - task: replacetokens@6
+      inputs:
+        root: '$(System.DefaultWorkingDirectory)'
+        sources: 'deployment-template.yml'
+        transformsPrefix: '#{'
+        transformsSuffix: '}#'
+        telemetryOptout: true
+    - task: KubernetesManifest@1
+      displayName: 'Deploy to Dev'
+      inputs:
+        kubernetesServiceConnection: aksharishdev
+        namespace: dev
+        manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'
+
+- stage: ManualApproval
+  dependsOn: DevDeploy
+  jobs:
+  - job: ManualApproval
+    displayName: 'Manual Approval'
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      displayName: 'Manual Approval for Dev'
+      inputs:
+        notifyUsers: 'pulle.sravankumar@gmail.com'
+        instructions: 'Please validate the plan and resume'
+
+- stage: QADeply
+  dependsOn: ManualApproval
+  jobs:
+  - job: QADeply
+    steps:
+    - task: KubectlInstaller@0
+      displayName: 'Install Kubectl latest'
+    
+    - task: AzureAppConfiguration@7
+      inputs:
+        azureSubscription: 'aksspharish'
+        AppConfigurationEndpoint: 'https://aksconfiguration.azconfig.io'
+        KeyFilter: '*'
+        Label: 'dev'
+    - task: replacetokens@6
+      inputs:
+        root: '$(System.DefaultWorkingDirectory)'
+        sources: 'deployment-template.yml'
+        transformsPrefix: '#{'
+        transformsSuffix: '}#'
+        telemetryOptout: true
+    - task: KubernetesManifest@1
+      displayName: 'Deploy to QA'
+      inputs:
+        kubernetesServiceConnection: aksharish
+        namespace: qa
+        manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'
+
+
+
+
+
+#Updated code without app configuration
+pool:
+  name: Azure Pipelines
+
+variables:
+  image: 'nginx:latest'
+  name: 'fn-dep'
+  port: 80
+  replicas: 3
+  app: 'nginx'
+
+stages:
+- stage: DevDeploy
+  jobs:
+  - job: DevDeploy
+    steps:
+    - task: KubectlInstaller@0
+      displayName: 'Install Kubectl latest'
+    - task: replacetokens@6
+      inputs:
+        root: '$(System.DefaultWorkingDirectory)'
+        sources: 'deployment-template.yml'
+        transformsPrefix: '#{'
+        transformsSuffix: '}#'
+        telemetryOptout: true
+    - task: KubernetesManifest@1
+      displayName: 'Deploy to Dev'
+      inputs:
+        kubernetesServiceConnection: aksharishdev
+        namespace: dev
+        manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'
+
+- stage: ManualApproval
+  dependsOn: DevDeploy
+  jobs:
+  - job: ManualApproval
+    displayName: 'Manual Approval'
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      displayName: 'Manual Approval for Dev'
+      inputs:
+        notifyUsers: 'pulle.sravankumar@gmail.com'
+        instructions: 'Please validate the plan and resume'
+
+- stage: QADeply
+  dependsOn: ManualApproval
+  jobs:
+  - job: QADeply
+    steps:
+    - task: KubectlInstaller@0
+      displayName: 'Install Kubectl latest'
+    - task: replacetokens@6
+      inputs:
+        root: '$(System.DefaultWorkingDirectory)'
+        sources: 'deployment-template.yml'
+        transformsPrefix: '#{'
+        transformsSuffix: '}#'
+        telemetryOptout: true
+    - task: KubernetesManifest@1
+      displayName: 'Deploy to QA'
+      inputs:
+        kubernetesServiceConnection: aksharish
+        namespace: qa
+        manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'

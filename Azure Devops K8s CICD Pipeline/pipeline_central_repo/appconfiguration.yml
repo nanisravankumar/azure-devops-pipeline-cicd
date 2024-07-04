@@ -1,0 +1,15 @@
+parameters:
+  - name: environment
+    type: string
+
+steps:
+- task: AzureAppConfiguration@7
+  inputs:
+    azureSubscription: '$(azureSubscription)'
+    AppConfigurationEndpoint: 'https://aksconfiguration.azconfig.io'
+    KeyFilter: '*'
+    ${{ if eq(parameters.environment, 'dev') }}:
+      Label: 'dev'
+    ${{ if eq(parameters.environment, 'qa') }}:
+      Label: 'qa'
+

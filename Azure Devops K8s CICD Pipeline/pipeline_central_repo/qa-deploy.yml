@@ -1,0 +1,25 @@
+jobs:
+- job: QADeply
+  steps:
+  - task: KubectlInstaller@0
+    displayName: 'Install Kubectl latest'
+  
+  - template: appconfiguration.yml@pipeline_central_repo
+    parameters:
+      environment: qa
+
+  - task: replacetokens@6
+    inputs:
+      root: '$(System.DefaultWorkingDirectory)'
+      sources: 'deployment-template.yml'
+      transformsPrefix: '#{'
+      transformsSuffix: '}#'
+      telemetryOptout: true
+  
+  - task: KubernetesManifest@1
+    displayName: 'Deploy to QA'
+    inputs:
+      kubernetesServiceConnection: aksharish
+      namespace: qa
+      manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'
+

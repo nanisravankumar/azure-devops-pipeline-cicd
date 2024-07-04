@@ -1,0 +1,6 @@
+steps:
+- task: ManualValidation@0
+  displayName: 'Manual Approval for Dev'
+  inputs:
+    notifyUsers: 'pulle.sravankumar@gmail.com'
+    instructions: 'Please validate the plan and resume'

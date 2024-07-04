@@ -1,0 +1,33 @@
+resources:
+  repositories:
+  - repository: pipeline_central_repo
+    type: git
+    name: pipeline_central_repo
+    ref: main
+
+pool:
+  name: Azure Pipelines
+
+variables:
+  azureSubscription: 'Azuresubscription'
+
+stages:
+- stage: DevDeploy
+  jobs:
+  - template: dev-deploy.yml@pipeline_central_repo
+
+- stage: ManualApproval
+  dependsOn: DevDeploy
+  jobs:
+  - job: waitForValidation
+    displayName: 'Manual Approval'
+    timeoutInMinutes: 2320
+    pool: server
+    steps:
+    - template: manualvalidation.yml@pipeline_central_repo
+
+- stage: QADeply
+  dependsOn: ManualApproval
+  jobs:
+  - template: qa-deploy.yml@pipeline_central_repo
+

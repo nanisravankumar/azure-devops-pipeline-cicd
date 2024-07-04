@@ -19,6 +19,6 @@ jobs:
   - task: KubernetesManifest@1
     displayName: 'Deploy to Dev'
     inputs:
-      kubernetesServiceConnection: aksharishdev
+      kubernetesServiceConnection: akstestclusterserviceconnection
       namespace: dev
       manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'

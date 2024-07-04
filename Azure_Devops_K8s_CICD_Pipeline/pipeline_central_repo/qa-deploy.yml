@@ -19,7 +19,7 @@ jobs:
   - task: KubernetesManifest@1
     displayName: 'Deploy to QA'
     inputs:
-      kubernetesServiceConnection: aksharish
+      kubernetesServiceConnection: akstestclusterserviceconnection
       namespace: qa
       manifests: '$(System.DefaultWorkingDirectory)/deployment-template.yml'
 

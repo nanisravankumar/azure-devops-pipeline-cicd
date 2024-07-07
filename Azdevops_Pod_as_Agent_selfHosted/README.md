@@ -2,10 +2,12 @@
 
 **Dockerfile and start.sh both required pasted below**
 
-https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/Dockerfile.dockerfile
 
+https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/Dockerfile.dockerfile
 https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/start.sh
+
 **Docker Login Command**
+
 docker login acrconfiguration.azurecr.io -u acrconfiguration -p C8MG1QpXzCgnKcuFxg5rkd690/dBBrLB6slqtak1KP+ACRCRo8cz
 docker build -t acrconfiguration.azurecr.io/myimage:latest .
 docker push acrconfiguration.azurecr.io/myimage:latest

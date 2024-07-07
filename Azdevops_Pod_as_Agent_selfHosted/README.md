@@ -1,19 +1,24 @@
 # Poc of Kubernetes-POD-azure-devops-pipeline-cicd
 
-# Dockerfile and start.sh both required pasted below
-https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/Dockerfile.dockerfile
-https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/start.sh
+**Dockerfile and start.sh both required pasted below**
 
+https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/Dockerfile.dockerfile
+
+https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/automation-agents/start.sh
+**Docker Login Command**
 docker login acrconfiguration.azurecr.io -u acrconfiguration -p C8MG1QpXzCgnKcuFxg5rkd690/dBBrLB6slqtak1KP+ACRCRo8cz
 docker build -t acrconfiguration.azurecr.io/myimage:latest .
 docker push acrconfiguration.azurecr.io/myimage:latest
+
+**Kubernetes secret creation command**
 
 kubectl create secret docker-registry acr-secret \
   --docker-server=acrconfiguration.azurecr.io \
   --docker-username=acrconfiguration \
   --docker-password=C8MG1QpXzCgnKcuFxg5rkd690/dBBrLB6slqtak1KP+ACRCRo8cz
 
-# deployment.yaml file for init-agents 
+**deployment.yaml file for init-agents** 
+
 https://github.com/nanisravankumar/azure-devops-pipeline-cicd/blob/master/Azdevops_Pod_as_Agent_selfHosted/agents/agents/deployments/init-agents/init-agents.yaml
 
 apiVersion: apps/v1
@@ -58,12 +63,12 @@ spec:
 ------------ Dockerfile---------------------
 FROM ubuntu:20.04
 
-# # To make it easier for build and release pipelines to run apt-get,
-# # configure apt to not require confirmation (assume the -y argument by default)
+# To make it easier for build and release pipelines to run apt-get,
+# configure apt to not require confirmation (assume the -y argument by default)
 ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
 
-## python3 & python3-pip added only for Promotion Stage
+# python3 & python3-pip added only for Promotion Stage
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -131,7 +136,7 @@ RUN apt-get install terraform
 #    apt-get update && apt-get install nodejs && \
 #    npm install --global yarn
 
-## Install latest stable Docker package
+# Install latest stable Docker package
 RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     chmod +x ./get-docker.sh && \
     export VERSION="20.10" && \
